@@ -8,5 +8,13 @@ declare module 'knex/types/tables' {
       email: string
       password: string
     }
+    snack: {
+      id: string
+      session_id: string
+      name: string
+      description: string
+      create_at: string
+      is_in_diet: boolean
+    }
   }
 }

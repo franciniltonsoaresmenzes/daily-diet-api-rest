@@ -4,12 +4,53 @@ import { z } from 'zod'
 import { randomUUID } from 'node:crypto'
 import { hashPassword } from '../functions/hashPassword'
 import { comparePassword } from '../functions/comparePassword'
+import { checkSessionIdExits } from '../middlewares/check-session-id-exists'
 
 export async function dailyRoutes(app: FastifyInstance) {
+  const createSnackSchema = z.object({
+    name: z.string(),
+    description: z.string(),
+    createAt: z.string(),
+    isInDiet: z.boolean(),
+  })
+
+  type Snack = z.infer<typeof createSnackSchema>
+
   app.get('/', async () => {
     const table = await knex('user').select('*')
     return table
   })
+
+  app.get('/snack', { preHandler: [checkSessionIdExits] }, async (request) => {
+    const { sessionId } = request.cookies
+
+    const snacks = await knex('snack')
+      .select()
+      .where<Snack[]>('session_id', sessionId)
+
+    return { snacks }
+  })
+
+  app.post(
+    '/snack',
+    { preHandler: [checkSessionIdExits] },
+    async (request, reply) => {
+      const { name, description, createAt, isInDiet } = createSnackSchema.parse(
+        request.body,
+      )
+
+      await knex('snack').insert({
+        id: randomUUID(),
+        session_id: request.cookies.sessionId,
+        name,
+        description,
+        create_at: createAt,
+        is_in_diet: isInDiet,
+      })
+
+      return reply.status(201).send()
+    },
+  )
 
   app.post('/register', async (request, reply) => {
     const createUserSchema = z.object({
@@ -40,7 +81,10 @@ export async function dailyRoutes(app: FastifyInstance) {
 
     const { email, password } = createUserSchema.parse(request.body)
 
-    const user = await knex('user').select<User>().where({ email }).first()
+    const user = await knex('user')
+      .select<User & { id: string }>()
+      .where({ email })
+      .first()
 
     const encrypted = user?.password === undefined ? '' : user?.password
 
@@ -52,9 +96,8 @@ export async function dailyRoutes(app: FastifyInstance) {
 
     let sessionId = request.cookies.sessionId
 
-    if (!sessionId) {
-      sessionId = randomUUID()
-
+    if (!sessionId && user?.id !== undefined) {
+      sessionId = user.id
       reply.cookie('sessionId', sessionId, {
         maxAge: 1000 * 60 * 60 * 24 * 7,
       })
