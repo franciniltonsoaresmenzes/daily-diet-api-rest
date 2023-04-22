@@ -14,6 +14,10 @@ export async function dailyRoutes(app: FastifyInstance) {
     isInDiet: z.boolean(),
   })
 
+  const getSnackParamsSchema = z.object({
+    id: z.string().uuid().nonempty(),
+  })
+
   type Snack = z.infer<typeof createSnackSchema>
 
   app.get('/', async () => {
@@ -30,6 +34,39 @@ export async function dailyRoutes(app: FastifyInstance) {
 
     return { snacks }
   })
+  app.get('/:id', { preHandler: [checkSessionIdExits] }, async (request) => {
+    const { sessionId } = request.cookies
+
+    const { id } = getSnackParamsSchema.parse(request.params)
+
+    const snack = await knex('snack')
+      .select()
+      .where({ session_id: sessionId, id })
+      .first()
+
+    return { snack }
+  })
+
+  app.put(
+    '/:id',
+    { preHandler: [checkSessionIdExits] },
+    async (request, reply) => {
+      const updateSnackSchema = z.object({
+        name: z.string().optional(),
+        description: z.string().optional(),
+        createAt: z.string().optional(),
+        isInDiet: z.boolean().optional(),
+      })
+
+      const { id } = getSnackParamsSchema.parse(request.params)
+
+      const { sessionId } = request.cookies
+
+      const snack = updateSnackSchema.parse(request.body)
+      await knex('snack').where({ id, session_id: sessionId }).update(snack)
+      return reply.status(201).send()
+    },
+  )
 
   app.post(
     '/snack',
