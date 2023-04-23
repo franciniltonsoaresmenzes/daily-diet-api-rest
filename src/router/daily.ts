@@ -47,6 +47,19 @@ export async function dailyRoutes(app: FastifyInstance) {
     return { snack }
   })
 
+  app.delete(
+    '/:id',
+    { preHandler: [checkSessionIdExits] },
+    async (request, reply) => {
+      const { sessionId } = request.cookies
+      const { id } = getSnackParamsSchema.parse(request.params)
+
+      await knex('snack').delete().where({ id, session_id: sessionId })
+
+      return reply.status(201).send()
+    },
+  )
+
   app.put(
     '/:id',
     { preHandler: [checkSessionIdExits] },
