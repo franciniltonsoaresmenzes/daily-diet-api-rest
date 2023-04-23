@@ -10,7 +10,7 @@ export async function dailyRoutes(app: FastifyInstance) {
   const createSnackSchema = z.object({
     name: z.string(),
     description: z.string(),
-    createAt: z.string(),
+    createAt: z.string().datetime(),
     isInDiet: z.boolean(),
   })
 
@@ -67,7 +67,7 @@ export async function dailyRoutes(app: FastifyInstance) {
       const updateSnackSchema = z.object({
         name: z.string().optional(),
         description: z.string().optional(),
-        createAt: z.string().optional(),
+        createAt: z.string().datetime().optional(),
         isInDiet: z.boolean().optional(),
       })
 
@@ -78,6 +78,27 @@ export async function dailyRoutes(app: FastifyInstance) {
       const snack = updateSnackSchema.parse(request.body)
       await knex('snack').where({ id, session_id: sessionId }).update(snack)
       return reply.status(201).send()
+    },
+  )
+
+  app.get(
+    '/summary',
+    { preHandler: [checkSessionIdExits] },
+    async (request) => {
+      const { sessionId } = request.cookies
+      const summary = await knex('snack')
+        .select(
+          knex.raw(
+            'count(*) filter (where is_in_diet = true) as totalWithinDiet',
+          ),
+          knex.raw(
+            'count(*) filter (where is_in_diet = false) as totalOutsideDiet',
+          ),
+          knex.raw('count(*) as total'),
+        )
+        .where({ session_id: sessionId })
+
+      return { summary }
     },
   )
 
