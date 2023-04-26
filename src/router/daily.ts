@@ -20,11 +20,6 @@ export async function dailyRoutes(app: FastifyInstance) {
 
   type Snack = z.infer<typeof createSnackSchema>
 
-  app.get('/', async () => {
-    const table = await knex('user').select('*')
-    return table
-  })
-
   app.get('/snack', { preHandler: [checkSessionIdExits] }, async (request) => {
     const { sessionId } = request.cookies
 

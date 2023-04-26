@@ -1,6 +1,7 @@
 import fastify from 'fastify'
-import { dailyRoutes } from './router/daily'
 import cookie from '@fastify/cookie'
+
+import { dailyRoutes } from './router/daily'
 
 export const app = fastify()
 
