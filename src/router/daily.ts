@@ -70,8 +70,15 @@ export async function dailyRoutes(app: FastifyInstance) {
 
       const { sessionId } = request.cookies
 
-      const snack = updateSnackSchema.parse(request.body)
-      await knex('snack').where({ id, session_id: sessionId }).update(snack)
+      const { name, description, createAt, isInDiet } = updateSnackSchema.parse(
+        request.body,
+      )
+      await knex('snack').where({ id, session_id: sessionId }).update({
+        name,
+        description,
+        create_at: createAt,
+        is_in_diet: isInDiet,
+      })
       return reply.status(201).send()
     },
   )
@@ -125,7 +132,10 @@ export async function dailyRoutes(app: FastifyInstance) {
     })
 
     const { email, password } = createUserSchema.parse(request.body)
-
+    const findByUser = await knex('user').select().where({ email }).first()
+    if (findByUser?.email === email) {
+      return reply.status(401).send({ error: 'usuario invalido' })
+    }
     const hash = await hashPassword(password)
 
     await knex('user').insert({
