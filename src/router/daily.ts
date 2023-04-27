@@ -20,6 +20,63 @@ export async function dailyRoutes(app: FastifyInstance) {
 
   type Snack = z.infer<typeof createSnackSchema>
 
+  app.post('/register', async (request, reply) => {
+    const createUserSchema = z.object({
+      email: z.string().email(),
+      password: z.string(),
+    })
+
+    const { email, password } = createUserSchema.parse(request.body)
+    const findByUser = await knex('user').select().where({ email }).first()
+    if (findByUser?.email === email) {
+      return reply.status(401).send({ error: 'usuario invalido' })
+    }
+    const hash = await hashPassword(password)
+
+    await knex('user').insert({
+      id: randomUUID(),
+      email,
+      password: hash,
+    })
+
+    return reply.status(201).send()
+  })
+
+  app.post('/login', async (request, reply) => {
+    const createUserSchema = z.object({
+      email: z.string().email(),
+      password: z.string(),
+    })
+
+    type User = z.infer<typeof createUserSchema>
+
+    const { email, password } = createUserSchema.parse(request.body)
+
+    const user = await knex('user')
+      .select<User & { id: string }>()
+      .where({ email })
+      .first()
+
+    const encrypted = user?.password === undefined ? '' : user?.password
+
+    const pass = await comparePassword(password, encrypted)
+
+    if (!pass) {
+      return reply.status(401).send({ error: 'usuario invalido' })
+    }
+
+    let sessionId = request.cookies.sessionId
+
+    if (!sessionId && user?.id !== undefined) {
+      sessionId = user.id
+      reply.cookie('sessionId', sessionId, {
+        maxAge: 1000 * 60 * 60 * 24 * 7,
+      })
+    }
+
+    return { login: true }
+  })
+
   app.get('/snack', { preHandler: [checkSessionIdExits] }, async (request) => {
     const { sessionId } = request.cookies
 
@@ -124,61 +181,4 @@ export async function dailyRoutes(app: FastifyInstance) {
       return reply.status(201).send()
     },
   )
-
-  app.post('/register', async (request, reply) => {
-    const createUserSchema = z.object({
-      email: z.string().email(),
-      password: z.string(),
-    })
-
-    const { email, password } = createUserSchema.parse(request.body)
-    const findByUser = await knex('user').select().where({ email }).first()
-    if (findByUser?.email === email) {
-      return reply.status(401).send({ error: 'usuario invalido' })
-    }
-    const hash = await hashPassword(password)
-
-    await knex('user').insert({
-      id: randomUUID(),
-      email,
-      password: hash,
-    })
-
-    return reply.status(201).send()
-  })
-
-  app.post('/login', async (request, reply) => {
-    const createUserSchema = z.object({
-      email: z.string().email(),
-      password: z.string(),
-    })
-
-    type User = z.infer<typeof createUserSchema>
-
-    const { email, password } = createUserSchema.parse(request.body)
-
-    const user = await knex('user')
-      .select<User & { id: string }>()
-      .where({ email })
-      .first()
-
-    const encrypted = user?.password === undefined ? '' : user?.password
-
-    const pass = await comparePassword(password, encrypted)
-
-    if (!pass) {
-      return reply.status(401).send({ error: 'usuario invalido' })
-    }
-
-    let sessionId = request.cookies.sessionId
-
-    if (!sessionId && user?.id !== undefined) {
-      sessionId = user.id
-      reply.cookie('sessionId', sessionId, {
-        maxAge: 1000 * 60 * 60 * 24 * 7,
-      })
-    }
-
-    return { login: true }
-  })
 }

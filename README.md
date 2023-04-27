@@ -1,4 +1,13 @@
-<h1 align="center" >Desafio: Daily Diet API</<h1>
+<p align="center">
+  <img src="preview/icon.svg" alt="logo do ignite" width="50px"/>
+  <h1 align="center" >Desafio 02: Daily Diet API</<h1>
+</p>
+
+
+## Funcionalidades
+
+Este projeto consiste em uma API REST em Node.js para gerenciar sua dieta. Com esta aplicação, você pode cadastrar novas refeições, excluir refeições existentes e visualizar métricas importantes para sua dieta, como quantidades totais de alimentos dentro e fora da dieta.
+
 
 ## Regras da aplicação
 
@@ -20,3 +29,47 @@
   - [x] Quantidade total de refeições fora da dieta.
   - [ ] Melhor sequência por dia de refeições dentro da dieta.
 - [x] O usuário só pode visualizar, editar e apagar as refeições o qual ele criou.
+
+
+## :hammer_and_wrench: Tecnologias
+
+* **Node.Js**
+* **Typescript**
+* **Zod**
+* **Fastify**
+  * @fastify/cookie
+* **Eslint**
+* **Vitest**
+* **Supertest**
+* **Tsx**
+* **Sqlit 3** para ambiente de desenvolvimento.
+
+## 👷 Requisitos
+
+```bash
+# Clone repository
+
+$ git clone https://github.com/franciniltonsoaresmenzes/daily-diet-api-rest.git
+
+# Go to server folder
+
+$ cd daily-diet-api-rest
+# Install Dependencies
+
+$ npm i
+
+# Rename file .env.example to .env
+
+# Rename file .env.test.example to .env.test
+
+# Run script Knex
+
+$ npm run knex -- migrate:latest
+
+# Run aplication
+
+$ npm run dev
+
+# Access localhost
+# http://localhost:3333
+```
