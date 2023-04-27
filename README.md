@@ -8,6 +8,39 @@
 
 Este projeto consiste em uma API REST em Node.js para gerenciar sua dieta. Com esta aplicação, você pode cadastrar novas refeições, excluir refeições existentes e visualizar métricas importantes para sua dieta, como quantidades totais de alimentos dentro e fora da dieta.
 
+## Rotas
+
+* `POST - /daily/register/`
+
+  Criar um novo usuario, recebendo no body da requisição `email` e `password`
+
+* `POST - /daily/login/`
+
+  Fazer um novo login, recebendo no body da requisição `email` e `password`
+
+* `GET - /daily/snacks/`
+
+  Listar todos os registros de dietas no banco de dados.
+
+* `POST - /daily/snacks/`
+
+  Criar uma nova refeição, recebendo no body da requisição `name`, `description` e `isInDiet`.
+ 
+* `GET - /daily/:id`
+
+  Listar apenas uma dieta especificas no banco de dados.
+
+* `DELETE - /daily/:id`
+
+  Deletar apenas uma dieta especificas no banco de dados.
+
+* `PUT - /daily/:id`
+
+  Alterar dados de  apenas uma dieta especificas no banco de dados.
+
+* `GET - /daily/summary`
+
+  Mostar metricas como quantidade total de refeições registradas, quantidade total dentro da dieta.
 
 ## Regras da aplicação
 
